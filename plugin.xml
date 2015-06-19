@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<plugin xmlns="http://cordova.apache.org/ns/plugins/1.0"
+	id="cordova-plugin-gladius-Barcode-Scanner1D"
+	version="0.6.1">
+
+	<name>GladiusBarcodeScanner1D</name>
+	<description>Gladius Bar Code Scanner Plugin</description>
+	<license>EYC</license>
+	<keywords>barcodescanner</keywords>
+
+	<js-module src="www/gladiusBarcodeScanner1D.js">
+		<clobbers target="plugins.gladiusBarcodeScanner1D" />
+	</js-module>
+
+
+	<!-- android -->
+	<platform name="android">
+		<config-file target="res/xml/config.xml" parent="/*">
+			<feature name="GladiusBarcodeScanner1D" >
+				<param name="android-package" value="com.eyc.plugins.GladiusBarcodeScanner1D"/>
+			</feature>
+		</config-file>
+
+		<source-file src="src/android/GladiusBarcodeScanner1D.java" target-dir="src/com/eyc/plugins/GladiusBarcodeScanner1D" />
+	</platform>
+</plugin>
