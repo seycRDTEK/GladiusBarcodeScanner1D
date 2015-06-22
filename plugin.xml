@@ -22,6 +22,7 @@
 			</feature>
 		</config-file>
 
-		<source-file src="src/android/GladiusBarcodeScanner1D.java" target-dir="src/com/eyc/plugins/GladiusBarcodeScanner1D" />
+		<source-file src="src/android/GladiusBarcodeScanner1D.java" target-dir="src/com/eyc/plugins" />
+		<source-file src="src/android/GladiusScanReceiver1D.java" target-dir="src/com/eyc/plugins" />
 	</platform>
 </plugin>
