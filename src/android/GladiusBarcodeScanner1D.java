@@ -15,7 +15,7 @@ import android.media.MediaPlayer;
 import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 
-import com.eyc.mobility.GSMActivity;
+import gsm.eyc.com.GSMActivity;
 
 import android.app.ScanSerialManager;
 import android.hardware.GpioManager;
@@ -52,7 +52,12 @@ public class GladiusBarcodeScanner1D extends CordovaPlugin {
 			switch (msg.what) {
 			case REGISTER_GET_SCAN_DATA:
 				String read_text = msg.getData().getString("read_text");
-				Log.d(TAG, "message = " + read_text);
+				/*Log.d(TAG, "read-text.length() = " + read_text.length());
+    byte[] bytes = read_text.getBytes();
+    for(byte b : bytes){
+        Log.d(TAG, "byte " + b);
+    }
+                Log.d(TAG, "msg.getData = " + msg.getData().toString());*/
 				if (mActivity != null && mGpioPort != null){
 					PluginResult result = new PluginResult(PluginResult.Status.OK, read_text);
 					result.setKeepCallback(true);
