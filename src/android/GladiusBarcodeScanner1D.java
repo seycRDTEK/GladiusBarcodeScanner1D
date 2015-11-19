@@ -2,6 +2,7 @@ package com.eyc.plugins;
 
 import java.io.IOException;
 
+import android.app.Activity;
 import org.apache.cordova.CallbackContext;
 import org.apache.cordova.CordovaPlugin;
 import org.apache.cordova.PluginResult;
@@ -15,8 +16,6 @@ import android.media.MediaPlayer;
 import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 
-import gsm.eyc.com.GSMActivity;
-
 import android.app.ScanSerialManager;
 import android.hardware.GpioManager;
 import android.hardware.GpioPort;
@@ -28,23 +27,23 @@ import android.os.Messenger;
 
 public class GladiusBarcodeScanner1D extends CordovaPlugin {
 
-	private String TAG = "BarcodeScanner";
+	private static String TAG = "BarcodeScanner";
 	private static final String START_LISTENER = "startBarcodeListener1D";
 	private static final String STOP_LISTENER = "stopBarcodeListener1D";
 	private static final String START_SCAN = "startScanning1D";
 	private static final int decodeTimeout = 2000;
-	private CallbackContext scanReceivedCb;
+	private static CallbackContext scanReceivedCb;
 
-	private ScanSerialManager mScanSerialManager;
+	private static ScanSerialManager mScanSerialManager;
 	private static final int REGISTER_GET_SCAN_DATA = 1;
-	private GpioManager mGpioManager;
-	private GpioPort mGpioPort;
-	private Messenger mMessenger;
-	private IBinder mBinder;
+	private static GpioManager mGpioManager;
+	private static GpioPort mGpioPort;
+	private static Messenger mMessenger;
+	private static IBinder mBinder;
 
-	private int nGoodReadFlag = 0;
-	private GladiusScanReceiver1D scanReceiver = null;
-	private GSMActivity mActivity = null;
+	//private GladiusScanReceiver1D scanReceiver = null;
+	private static Activity mActivity = null;
+    private static boolean askedByUser = false;
 
 	private Handler mHandler = new Handler() {
 		@Override
@@ -53,14 +52,14 @@ public class GladiusBarcodeScanner1D extends CordovaPlugin {
 			case REGISTER_GET_SCAN_DATA:
 				String read_text = msg.getData().getString("read_text");
 				Log.d(TAG, "message = " + read_text);
-				if (mActivity != null && mGpioPort != null){
+				if (askedByUser && mGpioPort != null){
 					PluginResult result = new PluginResult(PluginResult.Status.OK, read_text);
 					result.setKeepCallback(true);
 					scanReceivedCb.sendPluginResult(result);
 					Intent sendIntent = BarcodeScanner.getBroadCastIntent(PluginResult.Status.OK, read_text, true);
 					LocalBroadcastManager.getInstance(mActivity.getApplicationContext()).sendBroadcast(sendIntent);
 				}
-				mActivity = null;
+				askedByUser = false;
 				break;
 			}
 		}
@@ -74,8 +73,8 @@ public class GladiusBarcodeScanner1D extends CordovaPlugin {
 				return true; //listener already called, do nothing
 			}
 			scanReceivedCb = callbackContext;
-			mScanSerialManager = (ScanSerialManager)((GSMActivity)this.cordova.getActivity()).getSystemService("scan_serial"); 
-			mGpioManager = (GpioManager)((GSMActivity)this.cordova.getActivity()).getSystemService("gpio");			
+			mScanSerialManager = (ScanSerialManager)(this.cordova.getActivity()).getSystemService("scan_serial");
+			mGpioManager = (GpioManager)(this.cordova.getActivity()).getSystemService("gpio");
 			mMessenger = new Messenger(mHandler);
 			mBinder = mMessenger.getBinder();
 			mScanSerialManager.registerForReadSerialData(mBinder, REGISTER_GET_SCAN_DATA);
@@ -86,16 +85,16 @@ public class GladiusBarcodeScanner1D extends CordovaPlugin {
 				Log.d(TAG, "IOException");
 			}
 
-			if (this.scanReceiver == null) {
+			/*if (this.scanReceiver == null) {
 				Log.d(TAG, "Instantiate Scan Receiver");
 				this.scanReceiver = new GladiusScanReceiver1D();
 				this.scanReceiver.setCallingListener(this);
 				IntentFilter ifMiki1D = new IntentFilter("com.mobile.miki.action.startscan");
 				Intent tmp = this.cordova.getActivity().registerReceiver(this.scanReceiver, ifMiki1D);
 				Log.d(TAG, "Scan Receiver created successfully : "+tmp);
-			}
+			}*/
 
-			((GSMActivity)this.cordova.getActivity()).setGladiusScanner1D(this);
+            //mActivity = this.cordova.getActivity();
 			return true;
 		}
 		else if (START_SCAN.equals(action)){ //possibility to call the scan directly
@@ -110,11 +109,13 @@ public class GladiusBarcodeScanner1D extends CordovaPlugin {
 		return false;  // Returning false results in a "MethodNotFound" error.
 	}
 
-	public boolean startScanning(){
-		return startScanning(this.scanReceivedCb);
+	public static boolean startScanning(Activity callingActivity){
+        mActivity = callingActivity;
+		return startScanning(scanReceivedCb);
 	}
 
-	private boolean startScanning(CallbackContext scanReceivedCb) {
+	private static boolean startScanning(CallbackContext scanReceivedCb) {
+        int nGoodReadFlag = 0;
 		if (mGpioPort != null) {
 			Log.d(TAG, "mGpioPort != null");
 			//mGpioPort.startScan();
@@ -125,7 +126,7 @@ public class GladiusBarcodeScanner1D extends CordovaPlugin {
 					if (nGoodReadFlag == 1)
 					{
 						Log.d(TAG, "nGoodReadFlag = " + nGoodReadFlag);
-						mActivity = (GSMActivity)this.cordova.getActivity();
+						askedByUser = true;
 						break;
 					}
 				}
